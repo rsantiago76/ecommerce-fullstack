@@ -19,14 +19,28 @@ def on_startup():
     finally:
         db.close()
 
-origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")] if settings.CORS_ORIGINS else ["*"]
+# ---- CORS (Render-safe, supports JWT) ----
+origins_raw = (settings.CORS_ORIGINS or "").strip()
+
+if not origins_raw:
+    origins = ["https://ecommerce-ui-5hvm.onrender.com"]
+    allow_credentials = True
+elif origins_raw == "*":
+    origins = ["*"]
+    allow_credentials = False  # IMPORTANT: cannot use credentials with "*"
+else:
+    origins = [o.strip().rstrip("/") for o in origins_raw.split(",") if o.strip()]
+    allow_credentials = True
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins != ["*"] else ["*"],
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"],  # includes Authorization
 )
+# -----------------------------------------
+
 
 @app.get("/health")
 def health():
