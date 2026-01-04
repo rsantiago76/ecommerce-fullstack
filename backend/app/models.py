@@ -1,3 +1,4 @@
+Is this correct for backend/app/models.py
 from sqlalchemy import String, Integer, Float, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .db import Base
@@ -19,3 +20,6 @@ class CartItem(Base):
     created_at: Mapped["DateTime"] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     product: Mapped[Product] = relationship("Product")
+
+
+user_id = Column(Integer, index=True, nullable=False)
