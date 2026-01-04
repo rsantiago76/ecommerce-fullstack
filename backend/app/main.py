@@ -20,20 +20,29 @@ def on_startup():
         db.close()
 
 # ---- CORS (Render-safe) ----
-origins = (
-    [o.strip() for o in settings.CORS_ORIGINS.split(",")]
-    if settings.CORS_ORIGINS
-    else []
-)
+origins_raw = (settings.CORS_ORIGINS or "").strip()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if origins_raw == "*" or origins_raw == "":
+    # Wildcard mode (public API) — must NOT use credentials with "*"
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    # Explicit origin(s) — credentials are OK
+    origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 # ----------------------------
+
 
 @app.get("/health")
 def health():
