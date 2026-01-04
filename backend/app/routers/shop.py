@@ -39,6 +39,13 @@ def add_to_cart(payload: schemas.CartItemIn, db: Session = Depends(get_db)):
 def get_cart(db: Session = Depends(get_db)):
     return _cart(db)
 
+@router.delete("/cart", response_model=schemas.CartOut)
+def clear_cart(db: Session = Depends(get_db)):
+    db.query(models.CartItem).delete()
+    db.commit()
+    return _cart(db)
+
+
 def _cart(db: Session) -> schemas.CartOut:
     items = db.query(models.CartItem).order_by(models.CartItem.created_at.desc()).all()
     out_items = []
