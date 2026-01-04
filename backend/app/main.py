@@ -19,19 +19,24 @@ def on_startup():
     finally:
         db.close()
 
-origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")] if settings.CORS_ORIGINS else ["*"]
+# ---- CORS (Render-safe) ----
+origins = (
+    [o.strip() for o in settings.CORS_ORIGINS.split(",")]
+    if settings.CORS_ORIGINS
+    else []
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins != ["*"] else ["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# ----------------------------
 
-@app.get("/debug/cors")
-def debug_cors():
-    return {
-        "cors_origins_env": settings.CORS_ORIGINS,
-        "parsed_origins": [o.strip() for o in settings.CORS_ORIGINS.split(",")] if settings.CORS_ORIGINS else [],
-    }
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 
