@@ -22,26 +22,21 @@ def on_startup():
 # ---- CORS (Render-safe) ----
 origins_raw = (settings.CORS_ORIGINS or "").strip()
 
-if origins_raw == "*" or origins_raw == "":
-    # Wildcard mode (public API) — must NOT use credentials with "*"
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# If no origins are configured, fall back to your Render UI URL (safe default)
+if not origins_raw:
+    origins = ["https://ecommerce-ui-5hvm.onrender.com"]
 else:
-    # Explicit origin(s) — credentials are OK
     origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,      # MUST be explicit when allow_credentials=True
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ----------------------------
+
 
 
 @app.get("/health")
