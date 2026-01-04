@@ -28,9 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+@app.get("/debug/cors")
+def debug_cors():
+    return {
+        "cors_origins_env": settings.CORS_ORIGINS,
+        "parsed_origins": [o.strip() for o in settings.CORS_ORIGINS.split(",")] if settings.CORS_ORIGINS else [],
+    }
 
-app.include_router(shop_router)
-app.include_router(checkout_router)
