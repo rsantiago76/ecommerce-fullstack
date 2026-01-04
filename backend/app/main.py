@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -22,7 +22,6 @@ def on_startup():
 # ---- CORS (Render-safe) ----
 origins_raw = (settings.CORS_ORIGINS or "").strip()
 
-# If no origins are configured, fall back to your Render UI URL (safe default)
 if not origins_raw:
     origins = ["https://ecommerce-ui-5hvm.onrender.com"]
 else:
@@ -30,17 +29,23 @@ else:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,      # MUST be explicit when allow_credentials=True
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 # ----------------------------
 
-
+@app.get("/debug/headers")
+def debug_headers(request: Request):
+    return {
+        "origin": request.headers.get("origin"),
+        "cors_origins_env": settings.CORS_ORIGINS,
+    }
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 
