@@ -25,7 +25,7 @@ origins_raw = (settings.CORS_ORIGINS or "").strip()
 if not origins_raw:
     origins = ["https://ecommerce-ui-5hvm.onrender.com"]
 else:
-    origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
+    origins = [o.strip().rstrip("/") for o in origins_raw.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
