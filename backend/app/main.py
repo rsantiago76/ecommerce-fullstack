@@ -47,5 +47,9 @@ def debug_headers(request: Request):
 def health():
     return {"status": "ok"}
 
+app.include_router(shop_router)
+app.include_router(checkout_router)
+
+
 
 
