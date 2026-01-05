@@ -7,33 +7,62 @@ function money(n) {
 
 export default function App() {
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState({ items: [], subtotal: 0 });
   const [health, setHealth] = useState("checking...");
   const [error, setError] = useState("");
+
+  // Demo cart state (local-only, no API calls)
+  const [cart, setCart] = useState({ items: [], subtotal: 0 });
 
   async function refresh() {
     setError("");
     try {
-      const [h, p, c] = await Promise.all([
+      const [h, p] = await Promise.all([
         apiGet("/health"),
         apiGet("/products"),
-        apiGet("/cart"),
       ]);
       setHealth(h.status);
       setProducts(p);
-      setCart(c);
+
+      // Since /cart is removed from API, keep cart empty for now
+      setCart({ items: [], subtotal: 0 });
     } catch (e) {
       setError(String(e.message || e));
     }
   }
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+  }, []);
 
+  // Disable add-to-cart since API cart routes are removed
   async function add(productId) {
     setError("");
     try {
-      const c = await apiPost("/cart/items", { product_id: productId, quantity: 1 });
-      setCart(c);
+      const product = products.find((x) => x.id === productId);
+      if (!product) return;
+
+      // Local-only cart (demo)
+      setCart((prev) => {
+        const existing = prev.items.find((it) => it.product.id === productId);
+        let nextItems;
+        if (existing) {
+          nextItems = prev.items.map((it) =>
+            it.product.id === productId ? { ...it, quantity: it.quantity + 1 } : it
+          );
+        } else {
+          nextItems = [
+            ...prev.items,
+            { id: `${productId}`, product, quantity: 1 },
+          ];
+        }
+
+        const subtotal = nextItems.reduce(
+          (sum, it) => sum + it.quantity * it.product.price,
+          0
+        );
+
+        return { items: nextItems, subtotal: Number(subtotal.toFixed(2)) };
+      });
     } catch (e) {
       setError(String(e.message || e));
     }
@@ -84,7 +113,8 @@ export default function App() {
         </section>
 
         <aside style={{ padding: 16, border: "1px solid #eee", borderRadius: 16 }}>
-          <h2>Cart</h2>
+          <h2>Cart (Local Demo)</h2>
+
           {cart.items.length === 0 ? (
             <div style={{ opacity: 0.75 }}>Your cart is empty.</div>
           ) : (
