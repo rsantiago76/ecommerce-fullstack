@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -19,16 +19,18 @@ def on_startup():
     finally:
         db.close()
 
-# ---- CORS (Render-safe, handles wildcard correctly) ----
-origins_raw = (settings.CORS_ORIGINS or "").strip()
+# ---------- CORS ----------
+raw = (settings.CORS_ORIGINS or "").strip()
 
-if origins_raw == "*" or origins_raw == "":
-    # Public/demo mode
+def normalize(origin: str) -> str:
+    return origin.strip().rstrip("/")
+
+if raw == "" or raw == "*":
+    # IMPORTANT: "*" cannot be used with allow_credentials=True
     allow_origins = ["*"]
     allow_credentials = False
 else:
-    # Locked-down mode (recommended)
-    allow_origins = [o.strip().rstrip("/") for o in origins_raw.split(",") if o.strip()]
+    allow_origins = [normalize(o) for o in raw.split(",") if o.strip()]
     allow_credentials = True
 
 app.add_middleware(
@@ -36,11 +38,9 @@ app.add_middleware(
     allow_origins=allow_origins,
     allow_credentials=allow_credentials,
     allow_methods=["*"],
-    allow_headers=["*"],  # includes Authorization
+    allow_headers=["*"],
 )
-# -------------------------------------------------------
-
-
+# --------------------------
 
 @app.get("/health")
 def health():
@@ -48,3 +48,4 @@ def health():
 
 app.include_router(shop_router)
 app.include_router(checkout_router)
+
