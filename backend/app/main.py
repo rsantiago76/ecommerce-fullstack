@@ -19,27 +19,27 @@ def on_startup():
     finally:
         db.close()
 
-# ---- CORS (Render-safe, supports JWT) ----
+# ---- CORS (Render-safe, handles wildcard correctly) ----
 origins_raw = (settings.CORS_ORIGINS or "").strip()
 
-if not origins_raw:
-    origins = ["https://ecommerce-ui-5hvm.onrender.com"]
-    allow_credentials = True
-elif origins_raw == "*":
-    origins = ["*"]
-    allow_credentials = False  # IMPORTANT: cannot use credentials with "*"
+if origins_raw == "*" or origins_raw == "":
+    # Public/demo mode
+    allow_origins = ["*"]
+    allow_credentials = False
 else:
-    origins = [o.strip().rstrip("/") for o in origins_raw.split(",") if o.strip()]
+    # Locked-down mode (recommended)
+    allow_origins = [o.strip().rstrip("/") for o in origins_raw.split(",") if o.strip()]
     allow_credentials = True
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allow_origins,
     allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],  # includes Authorization
 )
-# -----------------------------------------
+# -------------------------------------------------------
+
 
 
 @app.get("/health")
